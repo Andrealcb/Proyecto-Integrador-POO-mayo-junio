@@ -1,4 +1,4 @@
-# Proyecto: Tienda ⌂
+# Proyecto: Tienda ⌂ (entrega final POO semestre anterior)
 
 Simulador de una tienda desarrollado en **C++** utilizando **Programación Orientada a Objetos (POO)**, **herencia**, **composición**, separación en archivos `.h` y `.cpp`, y un menú interactivo por consola.
 
