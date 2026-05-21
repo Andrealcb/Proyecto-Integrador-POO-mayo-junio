@@ -1,27 +1,143 @@
-# Proyecto-Integrador-POO-mayo-junio
-# Proyecto Tienda (Avance 1)
+# Proyecto: Tienda ⌂
 
-Este proyecto es una simulacion basica de una tienda usando C++.  
-En este primer avance solo se implementa la clase **Producto**.
+Simulador de una tienda desarrollado en **C++** utilizando **Programación Orientada a Objetos (POO)**, **herencia**, **composición**, separación en archivos `.h` y `.cpp`, y un menú interactivo por consola.
 
-##  Para qué sirve este avance
-- Representar productos con nombre, precio y cantidad.
-- Probar la creacion de objetos.
-- Comprobar el uso de getters, setters y metodos.
-- Verificar el encapsulamiento.
-- Tener un proyecto organizado con `.h`, `.cpp` y `main.cpp`.
+---
 
-## Para que NO sirve todavia
-- No es una tienda completa.
-- No tiene menu.
-- No guarda productos en archivos.
-- No hace compras grandes ni inventarios completos.
+## ¿Para qué sirve este proyecto? (ᵔᵕᵔ)　
 
-## Como se usa
-1. Compilar los archivos:
-2. Ejecutar:
+Este programa simula una tienda básica con las siguientes funciones:
 
-## Contenido del proyecto
-- **producto.h** = Declaracion de la clase Producto  
-- **producto.cpp** = Implementacion de la clase  
-- **main.cpp** = Prueba de funcionamiento  
+* Crear productos con nombre, código, precio y cantidad.
+* Registrar usuarios mediante herencia (Administrador, Gerente, Empleado).
+* Agregar productos al carrito (composición).
+* Realizar ventas y actualizar el inventario.
+* Mostrar el inventario existente.
+* Generar tickets de compra.
+* Encapsular datos usando getters y setters.
+
+---
+
+## ¿Para qué NO sirve? ┬┬﹏┬┬
+
+Este proyecto NO:
+
+* Guarda información en archivos ni en bases de datos.
+* Mantiene los datos después de cerrar el programa.
+* Tiene interfaz gráfica (funciona solo por consola).
+* Realiza operaciones avanzadas como reportes complejos o estadísticas.
+
+---
+
+## Estructura del proyecto
+
+
+
+```
+Proyecto/
+│
+├── main.cpp
+│
+├── Producto.h
+├── Producto.cpp
+│
+├── Usuario.h
+├── Usuario.cpp
+│
+├── Admin.h
+├── Admin.cpp
+│
+├── Gerente.h
+├── Gerente.cpp
+│
+├── Empleado.h
+├── Empleado.cpp
+│
+├── Venta.h
+│
+├── Carrito.h
+├── Carrito.cpp
+│
+├── Tienda.h
+└── Tienda.cpp
+```
+
+---
+
+## Descripción de las clases (según UML)
+
+### **Producto**
+
+* Atributos: nombre, precio, cantidad
+* Métodos: mostrarInfo(), vender(), getters/setters
+* Ubicación: `Producto.h / Producto.cpp`
+
+### **Usuario**
+
+* Atributos: nombre
+* Métodos: getters, mostrarInfo
+* Ubicación: `Usuario.h / Usuario.cpp`
+
+### **Carrito (composición)**
+
+* Contiene una lista de productos
+* Métodos: agregarProducto(), mostrarCarrito(), total()
+* Relación UML: **Composición**
+* Ubicación: `Carrito.h / Carrito.cpp`
+
+### **Tienda (composición + agregación)**
+
+* Contiene: lista de productos y lista de usuarios
+* Métodos: mostrarProductos(), registrarUsuario(), comprar(), menú principal
+* Ubicación: `Tienda.h / Tienda.cpp`
+
+---
+
+## ¿Cómo se usa?
+
+
+---
+
+## ¿Cómo se usa?
+
+### 1. Compilar
+
+En consola:
+
+```bash
+podiar la direccion de la carpeta con los archivos y poner cd "Dirreccion"
+
+y luego:
+ 
+g++ main.cpp Tienda.cpp Producto.cpp Usuario.cpp Admin.cpp Gerente.cpp Empleado.cpp Carrito.cpp -o tienda
+
+
+### **2. Ejecutar**
+
+```
+./proyecto
+```
+
+### **3. Interactuar con el programa**
+
+Cuando entres al comienzo, te pedira una contraseña para Admin.
+
+Luego volveras a ingresarla despues de haber elegido tu rango (Administrador).
+
+Y asi ya podras interactuar con el menú y todo lo demás del programa.
+
+El menú muestra opciones como:
+
+* Ver productos
+* Agregar productos (solo Admin)
+* Agrgar gerentes o empleados (depende el rango)
+* Comprar
+* Ver carrito
+* Salir
+* Y más...
+
+Las opciones del menú dependeran de que rango eres, entre más alto el rango mas opciones tendrás.
+
+---
+
+
