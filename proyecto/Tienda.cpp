@@ -2,6 +2,7 @@
 #include "Admin.h"
 #include "Gerente.h"
 #include "Empleado.h"
+
 #include <iostream>
 #include <chrono>
 #include <ctime>
@@ -9,493 +10,1116 @@
 #include <algorithm>
 #include <cctype>
 
-
 using namespace std;
 
-/* Constructor */
-Tienda::Tienda() : nextProductoId(1), nextUsuarioId(1), nextVentaId(1) {}
+/* =========================
+   CONSTRUCTOR Y DESTRUCTOR
+========================= */
 
-/* Devuelve fecha y hora actual en formato "YYYY-MM-DD HH:MM:SS" */
+Tienda::Tienda()
+    : nextProductoId(1),
+      nextUsuarioId(1),
+      nextVentaId(1) {}
+
+Tienda::~Tienda() {
+
+    for (Usuario* usuario : usuarios) {
+        delete usuario;
+    }
+}
+
+/* =========================
+   FECHA Y HORA
+========================= */
+
 string Tienda::nowString() const {
+
     auto now = chrono::system_clock::now();
-    time_t t = chrono::system_clock::to_time_t(now);
+
+    time_t tiempoActual = chrono::system_clock::to_time_t(now);
+
     tm local_tm;
+
 #ifdef _WIN32
-    localtime_s(&local_tm, &t);
+    localtime_s(&local_tm, &tiempoActual);
 #else
-    localtime_r(&t, &local_tm);
+    localtime_r(&tiempoActual, &local_tm);
 #endif
-    char buf[64];
-    strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &local_tm);
-    return string(buf);
+
+    char buffer[64];
+
+    strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", &local_tm);
+
+    return string(buffer);
 }
 
-/* Lectura de línea con prompt */
+/* =========================
+   HELPERS
+========================= */
+
 string Tienda::readLine(const string& prompt) const {
-    if (!prompt.empty()) cout << prompt;
-    string s;
-    getline(cin, s);
-    return s;
+
+    if (!prompt.empty()) {
+        cout << prompt;
+    }
+
+    string texto;
+    getline(cin, texto);
+
+    return texto;
 }
 
-/* Parse helpers */
-double Tienda::parseDouble(const string& s) const {
-    try { return stod(s); } catch(...) { return 0.0; }
-}
-int Tienda::parseInt(const string& s) const {
-    try { return stoi(s); } catch(...) { return 0; }
+double Tienda::parseDouble(const string& texto) const {
+
+    try {
+        return stod(texto);
+    }
+    catch (...) {
+        return 0.0;
+    }
 }
 
-/* Busca índice de producto por código */
+int Tienda::parseInt(const string& texto) const {
+
+    try {
+        return stoi(texto);
+    }
+    catch (...) {
+        return 0;
+    }
+}
+
+/* =========================
+   PRODUCTOS
+========================= */
+
 int Tienda::indexProductoPorCodigo(const string& codigo) const {
-    for (size_t i = 0; i < productos.size(); ++i)
-        if (productos[i].getCodigo() == codigo) return (int)i;
+
+    for (size_t indice = 0; indice < productos.size(); indice++) {
+
+        if (productos[indice].getCodigo() == codigo) {
+            return indice;
+        }
+    }
+
     return -1;
 }
 
-/* Indica si existe el código */
 bool Tienda::codigoExiste(const string& codigo) const {
+
     return indexProductoPorCodigo(codigo) != -1;
 }
 
-/* Verifica si existe un usuario con ese nombre en cualquier colección */
-bool Tienda::usuarioExisteEnColeccion(const string& nombre) const {
-    for (const auto& a : administradores) if (a.getUsuario() == nombre) return true;
-    for (const auto& g : gerentes) if (g.getUsuario() == nombre) return true;
-    for (const auto& e : empleados) if (e.getUsuario() == nombre) return true;
+/* =========================
+   USUARIOS
+========================= */
+
+bool Tienda::usuarioExisteEnColeccion(const string& nombreUsuario) const {
+
+    for (const Usuario* usuario : usuarios) {
+
+        if (usuario->getUsuario() == nombreUsuario) {
+            return true;
+        }
+    }
+
     return false;
 }
 
-/* Crear tablas (simulado) */
+/* =========================
+   CREAR TABLAS
+========================= */
+
 void Tienda::crearTablas() {
+
     cout << "Tablas listas." << endl;
 }
 
-/* productos */
+/* =========================
+   AGREGAR PRODUCTO
+========================= */
+
 void Tienda::agregarProducto() {
+
     cout << "\n--- Agregar Producto ---\n";
-    string nombre = readLine("Ingrese el nombre del producto: ");
-    string codigo = readLine("Ingrese el código del producto: ");
-    if (codigo.empty()) { cout << "Codigo no puede ser vacío.\n"; return; }
-    if (codigoExiste(codigo)) {
-        cout << "El codigo ingresado ya existe. Intente con uno unico.\n";
+
+    string nombreProducto = readLine("Ingrese el nombre del producto: ");
+
+    string codigoProducto = readLine("Ingrese el codigo del producto: ");
+
+    if (codigoProducto.empty()) {
+
+        cout << "El codigo no puede estar vacio.\n";
         return;
     }
-    string sPrecio = readLine("Ingrese el precio unitario del producto: ");
-    double precio = parseDouble(sPrecio);
-    string sCant = readLine("Ingrese la cantidad en stock del producto: ");
-    int cantidad = parseInt(sCant);
 
-    Producto p(nextProductoId++, nombre, codigo, precio, cantidad);
-    productos.push_back(p);
-    cout << "Producto agregado exitosamente.\n";
+    if (codigoExiste(codigoProducto)) {
+
+        cout << "Ese codigo ya existe.\n";
+        return;
+    }
+
+    double precioProducto = parseDouble(
+        readLine("Ingrese el precio del producto: ")
+    );
+
+    int cantidadProducto = parseInt(
+        readLine("Ingrese la cantidad en stock: ")
+    );
+
+    Producto nuevoProducto(
+        nextProductoId++,
+        nombreProducto,
+        codigoProducto,
+        precioProducto,
+        cantidadProducto
+    );
+
+    productos.push_back(nuevoProducto);
+
+    cout << "Producto agregado correctamente.\n";
 }
 
-void Tienda::buscarProductoPorCodigo() const {
-    cout << "\n--- Buscar Producto ---\n";
-    string codigo = readLine("Ingrese el codigo del producto: ");
-    int idx = -1;
-    for (size_t i = 0; i < productos.size(); ++i) {
-        if (productos[i].getCodigo() == codigo) { idx = (int)i; break; }
+/* =========================
+   MOSTRAR PRODUCTOS
+========================= */
+
+void Tienda::mostrarProductos() const {
+
+    cout << "\n--- PRODUCTOS ---\n";
+
+    if (productos.empty()) {
+
+        cout << "No hay productos registrados.\n";
+        return;
     }
-    if (idx == -1) {
+
+    for (const Producto& producto : productos) {
+        producto.mostrar();
+    }
+}
+
+/* =========================
+   AGREGAR GERENTE
+========================= */
+
+void Tienda::agregarGerente() {
+
+    cout << "\n--- Agregar Gerente ---\n";
+
+    string nombreUsuario = readLine("Ingrese el nombre de usuario: ");
+
+    if (nombreUsuario.empty()) {
+
+        cout << "El usuario no puede estar vacio.\n";
+        return;
+    }
+
+    if (usuarioExisteEnColeccion(nombreUsuario)) {
+
+        cout << "Ese usuario ya existe.\n";
+        return;
+    }
+
+    string contrasena = readLine("Ingrese contraseña: ");
+
+    usuarios.push_back(
+        new Gerente(
+            nextUsuarioId++,
+            nombreUsuario,
+            contrasena
+        )
+    );
+
+    cout << "Gerente agregado correctamente.\n";
+}
+
+/* =========================
+   AGREGAR EMPLEADO
+========================= */
+
+void Tienda::agregarEmpleado() {
+
+    cout << "\n--- Agregar Empleado ---\n";
+
+    string nombreUsuario = readLine("Ingrese el nombre de usuario: ");
+
+    if (nombreUsuario.empty()) {
+
+        cout << "El usuario no puede estar vacio.\n";
+        return;
+    }
+
+    if (usuarioExisteEnColeccion(nombreUsuario)) {
+
+        cout << "Ese usuario ya existe.\n";
+        return;
+    }
+
+    string contrasena = readLine("Ingrese contraseña: ");
+
+    usuarios.push_back(
+        new Empleado(
+            nextUsuarioId++,
+            nombreUsuario,
+            contrasena
+        )
+    );
+
+    cout << "Empleado agregado correctamente.\n";
+}
+
+/* =========================
+   MOSTRAR USUARIOS
+========================= */
+
+void Tienda::mostrarUsuarios() const {
+
+    cout << "\n--- LISTA DE USUARIOS ---\n";
+
+    if (usuarios.empty()) {
+
+        cout << "No hay usuarios registrados.\n";
+        return;
+    }
+
+    for (const Usuario* usuario : usuarios) {
+
+        usuario->mostrarInformacion();
+    }
+}
+
+/* =========================
+   MOSTRAR TODOS LOS USUARIOS
+========================= */
+
+void Tienda::mostrarUsuariosCombinados() const {
+
+    cout << "\n--- TODOS LOS USUARIOS ---\n";
+
+    if (usuarios.empty()) {
+
+        cout << "No hay usuarios registrados.\n";
+        return;
+    }
+
+    for (const Usuario* usuario : usuarios) {
+
+        cout << usuario->getTipo()
+             << " | Usuario: "
+             << usuario->getUsuario()
+             << endl;
+    }
+}
+
+/* =========================
+   LOGIN ADMINISTRADOR
+========================= */
+
+vector<string> Tienda::siAdministrador() const {
+
+    vector<string> datosUsuario;
+
+    string nombreUsuario;
+    string contrasena;
+
+    cout << "Usuario: ";
+    getline(cin, nombreUsuario);
+
+    cout << "Contraseña: ";
+    getline(cin, contrasena);
+
+    for (const Usuario* usuario : usuarios) {
+
+        if (
+            usuario->getTipo() == "Administrador" &&
+            usuario->getUsuario() == nombreUsuario &&
+            usuario->getContrasena() == contrasena
+        ) {
+
+            datosUsuario = {
+                to_string(usuario->getId()),
+                usuario->getUsuario(),
+                usuario->getContrasena()
+            };
+
+            return datosUsuario;
+        }
+    }
+
+    return datosUsuario;
+}
+
+/* =========================
+   LOGIN GERENTE
+========================= */
+
+vector<string> Tienda::siGerente() const {
+
+    vector<string> datosUsuario;
+
+    string nombreUsuario;
+    string contrasena;
+
+    cout << "Usuario: ";
+    getline(cin, nombreUsuario);
+
+    cout << "Contraseña: ";
+    getline(cin, contrasena);
+
+    for (const Usuario* usuario : usuarios) {
+
+        if (
+            usuario->getTipo() == "Gerente" &&
+            usuario->getUsuario() == nombreUsuario &&
+            usuario->getContrasena() == contrasena
+        ) {
+
+            datosUsuario = {
+                to_string(usuario->getId()),
+                usuario->getUsuario(),
+                usuario->getContrasena()
+            };
+
+            return datosUsuario;
+        }
+    }
+
+    return datosUsuario;
+}
+
+/* =========================
+   LOGIN EMPLEADO
+========================= */
+
+vector<string> Tienda::siEmpleado() const {
+
+    vector<string> datosUsuario;
+
+    string nombreUsuario;
+    string contrasena;
+
+    cout << "Usuario: ";
+    getline(cin, nombreUsuario);
+
+    cout << "Contraseña: ";
+    getline(cin, contrasena);
+
+    for (const Usuario* usuario : usuarios) {
+
+        if (
+            usuario->getTipo() == "Empleado" &&
+            usuario->getUsuario() == nombreUsuario &&
+            usuario->getContrasena() == contrasena
+        ) {
+
+            datosUsuario = {
+                to_string(usuario->getId()),
+                usuario->getUsuario(),
+                usuario->getContrasena()
+            };
+
+            return datosUsuario;
+        }
+    }
+
+    return datosUsuario;
+}
+
+/* =========================
+   CREAR ADMINISTRADOR
+========================= */
+
+void Tienda::administradorNo() {
+
+    cout << "\nCree un usuario y contraseña para administrador:\n";
+
+    string nombreUsuario = readLine("Usuario: ");
+
+    string contrasena = readLine("Contraseña: ");
+
+    usuarios.push_back(
+        new Administrador(
+            nextUsuarioId++,
+            nombreUsuario,
+            contrasena
+        )
+    );
+
+    cout << "Administrador creado correctamente.\n";
+}
+
+/* =========================
+   BUSCAR PRODUCTO
+========================= */
+
+void Tienda::buscarProductoPorCodigo() const {
+
+    cout << "\n--- Buscar Producto ---\n";
+
+    string codigoProducto = readLine("Ingrese el codigo del producto: ");
+
+    int indiceProducto = indexProductoPorCodigo(codigoProducto);
+
+    if (indiceProducto == -1) {
+
         cout << "Producto no encontrado.\n";
         return;
     }
-    const Producto& p = productos[idx];
-    cout << "Producto encontrado: Nombre: " << p.getNombre()
-         << ", Código: " << p.getCodigo()
-         << ", Precio Unitario: " << fixed << setprecision(2) << p.getPrecio()
-         << ", Cantidad en stock: " << p.getCantidad()
-         << "\n";
+
+    const Producto& productoEncontrado = productos[indiceProducto];
+
+    cout << "Producto encontrado:\n";
+
+    cout << "Nombre: " << productoEncontrado.getNombre() << endl;
+
+    cout << "Codigo: " << productoEncontrado.getCodigo() << endl;
+
+    cout << "Precio: $" << fixed << setprecision(2)
+         << productoEncontrado.getPrecio() << endl;
+
+    cout << "Stock: "
+         << productoEncontrado.getCantidad()
+         << endl;
 }
 
-void Tienda::modificarProducto() {
-    cout << "\n--- Modificar Producto ---\n";
-    string codigo = readLine("Ingrese el codigo del producto a modificar: ");
-    int idx = indexProductoPorCodigo(codigo);
-    if (idx == -1) { cout << "Producto no encontrado.\n"; return; }
-    Producto &p = productos[idx];
-    cout << "Producto encontrado: Nombre: " << p.getNombre() << ", Codigo: " << p.getCodigo()
-         << ", Precio: " << p.getPrecio() << ", Stock: " << p.getCantidad() << "\n";
-    string nombre = readLine("Nuevo nombre (enter para dejar): ");
-    string precio = readLine("Nuevo precio (enter para dejar): ");
-    string cantidad = readLine("Nueva cantidad (enter para dejar): ");
+/* =========================
+   MODIFICAR PRODUCTO
+========================= */
 
-    if (!nombre.empty()) p.setNombre(nombre);
-    if (!precio.empty()) p.setPrecio(parseDouble(precio));
-    if (!cantidad.empty()) p.setCantidad(parseInt(cantidad));
+void Tienda::modificarProducto() {
+
+    cout << "\n--- Modificar Producto ---\n";
+
+    string codigoProducto = readLine(
+        "Ingrese el codigo del producto a modificar: "
+    );
+
+    int indiceProducto = indexProductoPorCodigo(codigoProducto);
+
+    if (indiceProducto == -1) {
+
+        cout << "Producto no encontrado.\n";
+        return;
+    }
+
+    Producto& productoEncontrado = productos[indiceProducto];
+
+    string nuevoNombre = readLine(
+        "Nuevo nombre (enter para dejar igual): "
+    );
+
+    string nuevoPrecio = readLine(
+        "Nuevo precio (enter para dejar igual): "
+    );
+
+    string nuevaCantidad = readLine(
+        "Nueva cantidad (enter para dejar igual): "
+    );
+
+    if (!nuevoNombre.empty()) {
+        productoEncontrado.setNombre(nuevoNombre);
+    }
+
+    if (!nuevoPrecio.empty()) {
+        productoEncontrado.setPrecio(
+            parseDouble(nuevoPrecio)
+        );
+    }
+
+    if (!nuevaCantidad.empty()) {
+        productoEncontrado.setCantidad(
+            parseInt(nuevaCantidad)
+        );
+    }
+
     cout << "Producto modificado correctamente.\n";
 }
 
+/* =========================
+   ELIMINAR PRODUCTO
+========================= */
+
 void Tienda::eliminarProducto() {
+
     cout << "\n--- Eliminar Producto ---\n";
-    string codigo = readLine("Ingrese el código del producto a eliminar: ");
-    int idx = indexProductoPorCodigo(codigo);
-    if (idx == -1) { cout << "No se encontró ningún producto con ese codigo.\n"; return; }
-    productos.erase(productos.begin() + idx);
+
+    string codigoProducto = readLine(
+        "Ingrese el codigo del producto a eliminar: "
+    );
+
+    int indiceProducto = indexProductoPorCodigo(codigoProducto);
+
+    if (indiceProducto == -1) {
+
+        cout << "Producto no encontrado.\n";
+        return;
+    }
+
+    productos.erase(productos.begin() + indiceProducto);
+
     cout << "Producto eliminado correctamente.\n";
 }
 
-void Tienda::mostrarProductos() const {
-    cout << "\n--- Productos ---\n";
-    if (productos.empty()) { cout << "No hay productos registrados.\n"; return; }
-    for (const auto& p : productos) p.mostrar();
-}
+/* =========================
+   VENDER PRODUCTO
+========================= */
 
-/* usuarios */
-void Tienda::agregarGerente() {
-    cout << "\n--- Agregar Gerente ---\n";
-    string nombre = readLine("Ingrese el nombre de usuario(gerente): ");
-    if (nombre.empty()) { cout << "Usuario no puede ser vacio.\n"; return; }
-    if (usuarioExisteEnColeccion(nombre)) { cout << "Usuario ya existe.\n"; return; }
-    string pass = readLine("Ingrese contraseña: ");
-    Gerente g(nextUsuarioId++, nombre, pass);
-    gerentes.push_back(g);
-    cout << "Gerente agregado.\n";
-}
+void Tienda::venderProducto(
+    const string& nombre_usuario,
+    const string& rango
+) {
 
-void Tienda::agregarEmpleado() {
-    cout << "\n--- Agregar Empleado ---\n";
-    string nombre = readLine("Ingrese el nombre de usuario(empleado): ");
-    if (nombre.empty()) { cout << "Usuario no puede ser vacio.\n"; return; }
-    if (usuarioExisteEnColeccion(nombre)) { cout << "Usuario ya existe.\n"; return; }
-    string pass = readLine("Ingrese contraseña: ");
-    Empleado e(nextUsuarioId++, nombre, pass);
-    empleados.push_back(e);
-    cout << "Empleado agregado.\n";
-}
-
-void Tienda::modificarGerente() {
-    cout << "\n--- Modificar Gerente ---\n";
-    string user = readLine("Ingrese el Usuario que desea modificar: ");
-    for (auto &g : gerentes) {
-        if (g.getUsuario() == user) {
-            cout << "Usuario encontrado: " << g.getUsuario() << "\n";
-            string nuevo = readLine("Nuevo nombre (enter para dejar): ");
-            string pass = readLine("Nueva contraseña (enter para dejar): ");
-            if (!nuevo.empty()) g.setUsuario(nuevo);
-            if (!pass.empty()) g.setContrasena(pass);
-            cout << "Gerente modificado.\n";
-            return;
-        }
-    }
-    cout << "Usuario no encontrado.\n";
-}
-
-void Tienda::modificarEmpleado() {
-    cout << "\n--- Modificar Empleado ---\n";
-    string user = readLine("Ingrese el Usuario que desea modificar: ");
-    for (auto &e : empleados) {
-        if (e.getUsuario() == user) {
-            cout << "Usuario encontrado: " << e.getUsuario() << "\n";
-            string nuevo = readLine("Nuevo nombre (enter para dejar): ");
-            string pass = readLine("Nueva contraseña (enter para dejar): ");
-            if (!nuevo.empty()) e.setUsuario(nuevo);
-            if (!pass.empty()) e.setContrasena(pass);
-            cout << "Empleado modificado.\n";
-            return;
-        }
-    }
-    cout << "Usuario no encontrado.\n";
-}
-
-void Tienda::eliminarGerente() {
-    cout << "\n--- Eliminar Gerente ---\n";
-    string user = readLine("Ingrese el Usuario que desea eliminar: ");
-    auto it = remove_if(gerentes.begin(), gerentes.end(), [&](const Gerente& u){ return u.getUsuario() == user; });
-    if (it != gerentes.end()) { gerentes.erase(it, gerentes.end()); cout << "Usuario eliminado.\n"; }
-    else cout << "Usuario no encontrado.\n";
-}
-
-void Tienda::eliminarEmpleado() {
-    cout << "\n--- Eliminar Empleado ---\n";
-    string user = readLine("Ingrese el Usuario que desea eliminar: ");
-    auto it = remove_if(empleados.begin(), empleados.end(), [&](const Empleado& u){ return u.getUsuario() == user; });
-    if (it != empleados.end()) { empleados.erase(it, empleados.end()); cout << "Usuario eliminado.\n"; }
-    else cout << "Usuario no encontrado.\n";
-}
-
-void Tienda::mostrarUsuarios() const {
-    cout << "\n--- Empleados ---\n";
-    if (empleados.empty()) cout << "No hay empleados.\n";
-    for (const auto& e : empleados) cout << "Usuario: " << e.getUsuario() << " | Pass: " << e.getContrasena() << "\n";
-}
-
-void Tienda::mostrarUsuariosCombinados() const {
-    cout << "\n--- Gerentes ---\n";
-    for (const auto& g : gerentes) cout << "Gerente: " << g.getUsuario() << " | Pass: " << g.getContrasena() << "\n";
-    cout << "\n--- Empleados ---\n";
-    for (const auto& e : empleados) cout << "Empleado: " << e.getUsuario() << " | Pass: " << e.getContrasena() << "\n";
-}
-
-/* ventas */
-void Tienda::venderProducto(const string& nombre_usuario, const string& rango) {
     cout << "\n--- Vender Producto ---\n";
+
     Carrito carrito;
-    while (true) {
-        string codigo = readLine("Ingrese el código del producto que desea vender (o 'fin' para terminar): ");
-        string low = codigo; for (auto &c : low) c = tolower(c);
-        if (low == "fin") break;
-        int idx = indexProductoPorCodigo(codigo);
-        if (idx == -1) { cout << "Producto no encontrado.\n"; continue; }
-        const Producto &p = productos[idx];
-        cout << "Producto encontrado: Nombre: " << p.getNombre()
-             << ", Código: " << p.getCodigo()
-             << ", Precio Unitario: " << fixed << setprecision(2) << p.getPrecio()
-             << ", Cantidad en stock: " << p.getCantidad() << "\n";
-        string sCant = readLine("Ingrese la cantidad a vender: ");
-        int cantidad_v = parseInt(sCant);
-        if (cantidad_v <= 0) { cout << "Cantidad inválida.\n"; continue; }
-        if (p.getCantidad() < cantidad_v) { cout << "No hay suficiente stock.\n"; continue; }
-        vector<string> fila = { to_string(p.getId()), p.getNombre(), p.getCodigo(), to_string(p.getPrecio()), to_string(p.getCantidad()) };
 
+    while (true) {
+
+        string codigoProducto = readLine(
+            "Ingrese el codigo del producto ('fin' para terminar): "
+        );
+
+        string codigoMinuscula = codigoProducto;
+
+        for (char& letra : codigoMinuscula) {
+            letra = tolower(letra);
+        }
+
+        if (codigoMinuscula == "fin") {
+            break;
+        }
+
+        int indiceProducto = indexProductoPorCodigo(codigoProducto);
+
+        if (indiceProducto == -1) {
+
+            cout << "Producto no encontrado.\n";
+            continue;
+        }
+
+        Producto& productoEncontrado = productos[indiceProducto];
+
+        cout << "Producto encontrado:\n";
+
+        cout << "Nombre: "
+             << productoEncontrado.getNombre()
+             << endl;
+
+        cout << "Precio: $"
+             << productoEncontrado.getPrecio()
+             << endl;
+
+        cout << "Stock disponible: "
+             << productoEncontrado.getCantidad()
+             << endl;
+
+        int cantidadVendida = parseInt(
+            readLine("Ingrese cantidad a vender: ")
+        );
+
+        if (cantidadVendida <= 0) {
+
+            cout << "Cantidad invalida.\n";
+            continue;
+        }
+
+        if (cantidadVendida > productoEncontrado.getCantidad()) {
+
+            cout << "No hay suficiente stock.\n";
+            continue;
+        }
+
+        vector<string> fila = {
+            to_string(productoEncontrado.getId()),
+            productoEncontrado.getNombre(),
+            productoEncontrado.getCodigo(),
+            to_string(productoEncontrado.getPrecio()),
+            to_string(productoEncontrado.getCantidad())
+        };
+
+        carrito.agregar(fila, cantidadVendida);
+
+        cout << "Producto agregado al carrito.\n";
     }
 
-    if (carrito.estaVacio()) { cout << "No se realizo ninguna venta.\n"; return; }
+    if (carrito.estaVacio()) {
 
-    double total_venta = carrito.total();
+        cout << "No se realizo ninguna venta.\n";
+        return;
+    }
+
+    double totalVenta = carrito.total();
+
     cout << fixed << setprecision(2);
-    cout << "Total a pagar: $" << total_venta << "\n";
-    double pago = 0.0;
-    while (true) {
-        string sPago = readLine("Ingrese el monto con el que paga: $");
-        pago = parseDouble(sPago);
-        if (pago >= total_venta) break;
-        cout << "Monto insuficiente. Intente de nuevo.\n";
-    }
-    double cambio = pago - total_venta;
 
-    // actualizar stock
-    for (const auto &it : carrito.getItems()) {
-        string codigo = "";
-        if (it.productoRow.size() >= 3) codigo = it.productoRow[2];
-        int cantV = it.cantidad;
-        int idx = indexProductoPorCodigo(codigo);
-        if (idx != -1) {
-            int nueva = productos[idx].getCantidad() - cantV;
-            productos[idx].setCantidad(nueva);
+    cout << "Total a pagar: $" << totalVenta << endl;
+
+    double pagoCliente = 0.0;
+
+    while (true) {
+
+        pagoCliente = parseDouble(
+            readLine("Ingrese pago del cliente: ")
+        );
+
+        if (pagoCliente >= totalVenta) {
+            break;
+        }
+
+        cout << "Pago insuficiente.\n";
+    }
+
+    double cambioCliente = pagoCliente - totalVenta;
+
+    for (const ItemCarrito& item : carrito.getItems()) {
+
+        string codigoProducto = item.productoRow[2];
+
+        int indiceProducto = indexProductoPorCodigo(codigoProducto);
+
+        if (indiceProducto != -1) {
+
+            int nuevoStock =
+                productos[indiceProducto].getCantidad()
+                - item.cantidad;
+
+            productos[indiceProducto].setCantidad(nuevoStock);
         }
     }
 
-    // imprimir ticket
-    cout << "\n--- Ticket de Compra ---\n";
-    cout << "Nombre de la Tienda\n";
-    cout << "Direccion ejemplo\n";
-    cout << "Tel: 9123456\n";
-    cout << "------------------------\n";
-    for (const auto &it : carrito.getItems()) {
-        cout << "Producto: " << it.productoRow[1] << "\n";
-        cout << "Codigo: " << it.productoRow[2] << "\n";
-        cout << "Cantidad vendida: " << it.cantidad << "\n";
-        double precio = 0.0;
-        try { precio = stod(it.productoRow[3]); } catch(...) { precio = 0.0; }
-        cout << "Precio unitario: $" << precio << "\n";
-        cout << "------------------------\n";
+    cout << "\n--- TICKET DE COMPRA ---\n";
+
+    for (const ItemCarrito& item : carrito.getItems()) {
+
+        cout << "Producto: "
+             << item.productoRow[1]
+             << endl;
+
+        cout << "Cantidad: "
+             << item.cantidad
+             << endl;
+
+        cout << "-----------------------\n";
     }
-    cout << "Total de la venta: $" << total_venta << "\n";
-    cout << "Pago recibido: $" << pago << "\n";
-    cout << "Cambio: $" << cambio << "\n";
-    cout << "------------------------\n";
-    cout << "Gracias por su compra.\n";
 
-    vector<pair<vector<string>,int>> lista;
-    for (const auto &it : carrito.getItems()) lista.push_back({ it.productoRow, it.cantidad });
+    cout << "Total: $" << totalVenta << endl;
 
-    registrarVenta(lista, total_venta, nombre_usuario.empty() ? "Desconocido" : nombre_usuario, rango.empty() ? "Desconocido" : rango);
+    cout << "Pago: $" << pagoCliente << endl;
+
+    cout << "Cambio: $" << cambioCliente << endl;
+
+    vector<pair<vector<string>, int>> productosVendidos;
+
+    for (const ItemCarrito& item : carrito.getItems()) {
+
+        productosVendidos.push_back({
+            item.productoRow,
+            item.cantidad
+        });
+    }
+
+    registrarVenta(
+        productosVendidos,
+        totalVenta,
+        nombre_usuario,
+        rango
+    );
+
     carrito.limpiar();
 }
 
-void Tienda::registrarVenta(const vector<pair<vector<string>,int>>& productos_a_vender, double total_venta, const string& usuario, const string& rango) {
-    string fecha = nowString();
-    for (const auto &pr : productos_a_vender) {
-        Venta v;
-        v.id = nextVentaId++;
-        v.producto = pr.first[1];
-        v.cantidad = pr.second;
-        try { v.precio_unitario = stod(pr.first[3]); } catch(...) { v.precio_unitario = 0.0; }
-        v.total = v.precio_unitario * v.cantidad;
-        v.vendedor = usuario;
-        v.rango = rango;
-        v.fecha_hora = fecha;
-        ventas_registradas.push_back(v);
+/* =========================
+   REGISTRAR VENTA
+========================= */
 
-        vector<string> fila = { v.producto, to_string(v.cantidad), to_string(v.precio_unitario), to_string(v.total), v.vendedor, v.rango, v.fecha_hora };
-        reporte_ventas.push_back(fila);
+void Tienda::registrarVenta(
+    const vector<pair<vector<string>, int>>& productos_a_vender,
+    double total_venta,
+    const string& usuario,
+    const string& rango
+) {
+
+    string fechaVenta = nowString();
+
+    for (const auto& producto : productos_a_vender) {
+
+        Venta nuevaVenta;
+
+        nuevaVenta.id = nextVentaId++;
+
+        nuevaVenta.producto = producto.first[1];
+
+        nuevaVenta.cantidad = producto.second;
+
+        nuevaVenta.precio_unitario =
+            stod(producto.first[3]);
+
+        nuevaVenta.total =
+            nuevaVenta.precio_unitario
+            * nuevaVenta.cantidad;
+
+        nuevaVenta.vendedor = usuario;
+
+        nuevaVenta.rango = rango;
+
+        nuevaVenta.fecha_hora = fechaVenta;
+
+        ventas_registradas.push_back(nuevaVenta);
     }
 }
 
-/* reportes */
+/* =========================
+   REPORTE DE VENTAS
+========================= */
+
 void Tienda::mostrarReporteVentas() const {
+
     cout << "\n--- REPORTE DE VENTAS ---\n";
-    string desde;
-    cout << "Ingrese fecha de inicio (YYYY-MM-DD): ";
-    getline(cin, desde);
-    string hasta;
-    cout << "Ingrese fecha final (YYYY-MM-DD): ";
-    getline(cin, hasta);
-    string desde_ts = desde + " 00:00:00";
-    string hasta_ts = hasta + " 23:59:59";
 
-    cout << left << setw(20) << "Fecha/Hora" << " " << setw(15) << "Producto" << " " << setw(6) << "Cant" << " " << setw(8) << "P.Unit" << " " << setw(8) << "Total" << " " << setw(15) << "Vendedor" << " " << setw(10) << "Rango" << "\n";
-    cout << string(100, '=') << "\n";
-    for (const auto &v : ventas_registradas) {
-        if (v.fecha_hora >= desde_ts && v.fecha_hora <= hasta_ts) {
-            cout << left << setw(20) << v.fecha_hora << " " << setw(15) << v.producto << " " << setw(6) << v.cantidad << " " << setw(8) << v.precio_unitario << " " << setw(8) << v.total << " " << setw(15) << v.vendedor << " " << setw(10) << v.rango << "\n";
-        }
+    if (ventas_registradas.empty()) {
+
+        cout << "No hay ventas registradas.\n";
+        return;
+    }
+
+    for (const Venta& venta : ventas_registradas) {
+
+        cout << "Fecha: "
+             << venta.fecha_hora
+             << endl;
+
+        cout << "Producto: "
+             << venta.producto
+             << endl;
+
+        cout << "Cantidad: "
+             << venta.cantidad
+             << endl;
+
+        cout << "Total: $"
+             << venta.total
+             << endl;
+
+        cout << "Vendedor: "
+             << venta.vendedor
+             << endl;
+
+        cout << "Rango: "
+             << venta.rango
+             << endl;
+
+        cout << "------------------------\n";
     }
 }
 
-/* login */
-vector<string> Tienda::siAdministrador() const {
-    vector<string> res;
-    cout << "\nIngrese usuario y contraseña:\n";
-    string u, p;
-    cout << "Usuario: "; getline(cin, u);
-    cout << "Contraseña: "; getline(cin, p);
-    for (const auto &a : administradores) {
-        if (a.getUsuario() == u && a.getContrasena() == p) {
-            res = { to_string(a.getId()), a.getUsuario(), a.getContrasena() };
-            return res;
-        }
-    }
-    return res;
-}
+/* =========================
+   RUN
+========================= */
 
-vector<string> Tienda::siGerente() const {
-    vector<string> res;
-    cout << "\nIngrese usuario y contraseña:\n";
-    string u, p;
-    cout << "Usuario: "; getline(cin, u);
-    cout << "Contraseña: "; getline(cin, p);
-    for (const auto &g : gerentes) {
-        if (g.getUsuario() == u && g.getContrasena() == p) {
-            res = { to_string(g.getId()), g.getUsuario(), g.getContrasena() };
-            return res;
-        }
-    }
-    return res;
-}
-
-vector<string> Tienda::siEmpleado() const {
-    vector<string> res;
-    cout << "\nIngrese usuario y contraseña:\n";
-    string u, p;
-    cout << "Usuario: "; getline(cin, u);
-    cout << "Contraseña: "; getline(cin, p);
-    for (const auto &e : empleados) {
-        if (e.getUsuario() == u && e.getContrasena() == p) {
-            res = { to_string(e.getId()), e.getUsuario(), e.getContrasena() };
-            return res;
-        }
-    }
-    return res;
-}
-
-void Tienda::administradorNo() {
-    cout << "\nCree un usuario y contraseña para administrador:\n";
-    string u = readLine("Usuario: ");
-    string p = readLine("Contraseña: ");
-    Administrador a(nextUsuarioId++, u, p);
-    administradores.push_back(a);
-    cout << "Administrador creado.\n";
-}
-
-/* ---------- run / menus ---------- */
 void Tienda::run() {
+
     crearTablas();
-    if (administradores.empty()) {
+
+    if (usuarios.empty()) {
         administradorNo();
     }
 
     while (true) {
-        cout << "\nSeleccione su tipo de usuario:\n1. Administrador\n2. Gerente\n3. Empleado\n4. Salir\n";
-        string tipo = readLine("Opción: ");
-        if (tipo == "4") break;
 
-        if (tipo == "1") {
-            auto usuario = siAdministrador();
-            if (!usuario.empty()) {
-                string nombre_usuario = usuario.size() > 1 ? usuario[1] : "";
-                string rango = "Administrador";
+        cout << "\nSeleccione su tipo de usuario:\n";
+
+        cout << "1. Administrador\n";
+        cout << "2. Gerente\n";
+        cout << "3. Empleado\n";
+        cout << "4. Salir\n";
+
+        string opcionTipoUsuario = readLine("Opcion: ");
+
+        /* =========================
+           ADMINISTRADOR
+        ========================= */
+
+        if (opcionTipoUsuario == "1") {
+
+            vector<string> administradorLogeado =
+                siAdministrador();
+
+            if (!administradorLogeado.empty()) {
+
+                string nombreUsuario =
+                    administradorLogeado[1];
+
+                string rangoUsuario = "Administrador";
+
                 while (true) {
+
                     cout << "\n--- MENU ADMINISTRADOR ---\n";
-                    cout << "1. Agregar producto\n2. Buscar producto por codigo\n3. Modificar producto\n4. Eliminar producto\n5. Vender producto\n6. Mostrar productos\n7. Mostrar todos los usuarios (gerentes y empleados)\n8. Reporte de ventas\n9. Agregar gerentes o empleados\n10. Modificar gerentes o empleados\n11. Eliminar empleados o gerentes\n12. Salir\n";
-                    string opt = readLine("Opción: ");
-                    if (opt == "1") agregarProducto();
-                    else if (opt == "2") buscarProductoPorCodigo();
-                    else if (opt == "3") modificarProducto();
-                    else if (opt == "4") eliminarProducto();
-                    else if (opt == "5") venderProducto(nombre_usuario, rango);
-                    else if (opt == "6") mostrarProductos();
-                    else if (opt == "7") mostrarUsuariosCombinados();
-                    else if (opt == "8") mostrarReporteVentas();
-                    else if (opt == "9") {
-                        string a = readLine("1. Gerente\n2. Empleado\n¿De que cargo desea agregar? ");
-                        if (a == "1") agregarGerente();
-                        else if (a == "2") agregarEmpleado();
+
+                    cout << "1. Agregar producto\n";
+                    cout << "2. Buscar producto\n";
+                    cout << "3. Modificar producto\n";
+                    cout << "4. Eliminar producto\n";
+                    cout << "5. Vender producto\n";
+                    cout << "6. Mostrar productos\n";
+                    cout << "7. Mostrar usuarios\n";
+                    cout << "8. Reporte de ventas\n";
+                    cout << "9. Agregar gerente\n";
+                    cout << "10. Agregar empleado\n";
+                    cout << "11. Salir\n";
+
+                    string opcionAdministrador =
+                        readLine("Opcion: ");
+
+                    if (opcionAdministrador == "1") {
+
+                        agregarProducto();
                     }
-                    else if (opt == "10") {
-                        string a = readLine("1. Gerente\n2. Empleado\n¿De que cargo desea modificar? ");
-                        if (a == "1") modificarGerente();
-                        else if (a == "2") modificarEmpleado();
+
+                    else if (opcionAdministrador == "2") {
+
+                        buscarProductoPorCodigo();
                     }
-                    else if (opt == "11") {
-                        string a = readLine("1. Gerente\n2. Empleado\n¿De que cargo desea eliminar? ");
-                        if (a == "1") eliminarGerente();
-                        else if (a == "2") eliminarEmpleado();
+
+                    else if (opcionAdministrador == "3") {
+
+                        modificarProducto();
                     }
-                    else if (opt == "12") break;
-                    else cout << "Opción no válida\n";
+
+                    else if (opcionAdministrador == "4") {
+
+                        eliminarProducto();
+                    }
+
+                    else if (opcionAdministrador == "5") {
+
+                        venderProducto(
+                            nombreUsuario,
+                            rangoUsuario
+                        );
+                    }
+
+                    else if (opcionAdministrador == "6") {
+
+                        mostrarProductos();
+                    }
+
+                    else if (opcionAdministrador == "7") {
+
+                        mostrarUsuariosCombinados();
+                    }
+
+                    else if (opcionAdministrador == "8") {
+
+                        mostrarReporteVentas();
+                    }
+
+                    else if (opcionAdministrador == "9") {
+
+                        agregarGerente();
+                    }
+
+                    else if (opcionAdministrador == "10") {
+
+                        agregarEmpleado();
+                    }
+
+                    else if (opcionAdministrador == "11") {
+
+                        break;
+                    }
+
+                    else {
+
+                        cout << "Opcion invalida.\n";
+                    }
                 }
-            } else {
-                cout << "Usuario o contraseña incorrectos.\n";
+            }
+
+            else {
+
+                cout << "Credenciales incorrectas.\n";
             }
         }
-        else if (tipo == "2") {
-            auto g = siGerente();
-            if (!g.empty()) {
-                string nombre_usuario = g.size() > 1 ? g[1] : "";
-                string rango = "Gerente";
+
+        /* =========================
+           GERENTE
+        ========================= */
+
+        else if (opcionTipoUsuario == "2") {
+
+            vector<string> gerenteLogeado =
+                siGerente();
+
+            if (!gerenteLogeado.empty()) {
+
+                string nombreUsuario =
+                    gerenteLogeado[1];
+
+                string rangoUsuario = "Gerente";
+
                 while (true) {
+
                     cout << "\n--- MENU GERENTE ---\n";
-                    cout << "1. Agregar producto\n2. Buscar producto por codigo\n3. Modificar producto\n4. Eliminar producto\n5. Vender producto\n6. Mostrar productos\n7. Mostrar todos los empleados\n8. Reporte de ventas\n9. Agregar empleados\n10. Modificar empleados\n11. Eliminar empleados\n12. Salir\n";
-                    string opt = readLine("Opción: ");
-                    if (opt == "1") agregarProducto();
-                    else if (opt == "2") buscarProductoPorCodigo();
-                    else if (opt == "3") modificarProducto();
-                    else if (opt == "4") eliminarProducto();
-                    else if (opt == "5") venderProducto(nombre_usuario, rango);
-                    else if (opt == "6") mostrarProductos();
-                    else if (opt == "7") mostrarUsuarios();
-                    else if (opt == "8") mostrarReporteVentas();
-                    else if (opt == "9") agregarEmpleado();
-                    else if (opt == "10") modificarEmpleado();
-                    else if (opt == "11") eliminarEmpleado();
-                    else if (opt == "12") break;
-                    else cout << "Opcion no valida\n";
+
+                    cout << "1. Agregar producto\n";
+                    cout << "2. Buscar producto\n";
+                    cout << "3. Modificar producto\n";
+                    cout << "4. Eliminar producto\n";
+                    cout << "5. Vender producto\n";
+                    cout << "6. Mostrar productos\n";
+                    cout << "7. Mostrar empleados\n";
+                    cout << "8. Reporte de ventas\n";
+                    cout << "9. Agregar empleado\n";
+                    cout << "10. Salir\n";
+
+                    string opcionGerente =
+                        readLine("Opcion: ");
+
+                    if (opcionGerente == "1") {
+
+                        agregarProducto();
+                    }
+
+                    else if (opcionGerente == "2") {
+
+                        buscarProductoPorCodigo();
+                    }
+
+                    else if (opcionGerente == "3") {
+
+                        modificarProducto();
+                    }
+
+                    else if (opcionGerente == "4") {
+
+                        eliminarProducto();
+                    }
+
+                    else if (opcionGerente == "5") {
+
+                        venderProducto(
+                            nombreUsuario,
+                            rangoUsuario
+                        );
+                    }
+
+                    else if (opcionGerente == "6") {
+
+                        mostrarProductos();
+                    }
+
+                    else if (opcionGerente == "7") {
+
+                        mostrarUsuarios();
+                    }
+
+                    else if (opcionGerente == "8") {
+
+                        mostrarReporteVentas();
+                    }
+
+                    else if (opcionGerente == "9") {
+
+                        agregarEmpleado();
+                    }
+
+                    else if (opcionGerente == "10") {
+
+                        break;
+                    }
+
+                    else {
+
+                        cout << "Opcion invalida.\n";
+                    }
                 }
-            } else cout << "Usuario o contraseña incorrectos.\n";
+            }
+
+            else {
+
+                cout << "Credenciales incorrectas.\n";
+            }
         }
-        else if (tipo == "3") {
-            auto e = siEmpleado();
-            if (!e.empty()) {
-                string nombre_usuario = e.size() > 1 ? e[1] : "";
-                string rango = "Empleado";
+
+        /* =========================
+           EMPLEADO
+        ========================= */
+
+        else if (opcionTipoUsuario == "3") {
+
+            vector<string> empleadoLogeado =
+                siEmpleado();
+
+            if (!empleadoLogeado.empty()) {
+
+                string nombreUsuario =
+                    empleadoLogeado[1];
+
+                string rangoUsuario = "Empleado";
+
                 while (true) {
+
                     cout << "\n--- MENU EMPLEADO ---\n";
-                    cout << "1. Buscar producto por código\n2. Vender producto\n3. Mostrar productos\n4. Salir\n";
-                    string opt = readLine("Opción: ");
-                    if (opt == "1") buscarProductoPorCodigo();
-                    else if (opt == "2") venderProducto(nombre_usuario, rango);
-                    else if (opt == "3") mostrarProductos();
-                    else if (opt == "4") break;
-                    else cout << "Opción no válida\n";
+
+                    cout << "1. Buscar producto\n";
+                    cout << "2. Vender producto\n";
+                    cout << "3. Mostrar productos\n";
+                    cout << "4. Salir\n";
+
+                    string opcionEmpleado =
+                        readLine("Opcion: ");
+
+                    if (opcionEmpleado == "1") {
+
+                        buscarProductoPorCodigo();
+                    }
+
+                    else if (opcionEmpleado == "2") {
+
+                        venderProducto(
+                            nombreUsuario,
+                            rangoUsuario
+                        );
+                    }
+
+                    else if (opcionEmpleado == "3") {
+
+                        mostrarProductos();
+                    }
+
+                    else if (opcionEmpleado == "4") {
+
+                        break;
+                    }
+
+                    else {
+
+                        cout << "Opcion invalida.\n";
+                    }
                 }
-            } else cout << "Usuario o contraseña incorrectos.\n";
+            }
+
+            else {
+
+                cout << "Credenciales incorrectas.\n";
+            }
         }
-        else cout << "Opcion no valida.\n";
+
+        /* =========================
+           SALIR
+        ========================= */
+
+        else if (opcionTipoUsuario == "4") {
+
+            break;
+        }
+
+        else {
+
+            cout << "Opcion invalida.\n";
+        }
     }
 
-    cout << "Programa finalizado.\n";
+    cout << "\nPrograma finalizado.\n";
 }

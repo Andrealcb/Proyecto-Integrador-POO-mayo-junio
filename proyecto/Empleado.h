@@ -6,9 +6,10 @@
 class Empleado : public Usuario {
 public:
     Empleado();
-    Empleado(int id, const std::string& usuario, const std::string& contrasena);
+    Empleado(int id, const string& usuario, const string& contrasena);
 
-    std::string getTipo() const override;
+    string getTipo() const override;
+    void mostrarInformacion() const override;
 };
 
 #endif

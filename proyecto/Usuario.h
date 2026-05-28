@@ -2,31 +2,28 @@
 #define USUARIO_H
 
 #include <string>
+using namespace std;
 
-/*
- * Clase base abstracta Usuario
- * Representa un usuario del sistema
- */
 class Usuario {
 protected:
     int id;
-    std::string usuario;
-    std::string contrasena;
+    string usuario;
+    string contrasena;
 
 public:
     Usuario();
-    Usuario(int id, const std::string& usuario, const std::string& contrasena);
+    Usuario(int id, const string& usuario, const string& contrasena);
     virtual ~Usuario() {}
 
     int getId() const;
-    std::string getUsuario() const;
-    std::string getContrasena() const;
+    string getUsuario() const;
+    string getContrasena() const;
 
-    void setUsuario(const std::string& u);
-    void setContrasena(const std::string& p);
+    void setUsuario(const string& usuario);
+    void setContrasena(const string& contrasena);
 
-    // Método virtual puro (polimorfismo real)
-    virtual std::string getTipo() const = 0;
+    virtual string getTipo() const = 0;
+    virtual void mostrarInformacion() const = 0;
 };
 
 #endif

@@ -2,12 +2,25 @@
 
 Usuario::Usuario() : id(-1), usuario(""), contrasena("") {}
 
-Usuario::Usuario(int id, const std::string& usuario, const std::string& contrasena)
+Usuario::Usuario(int id, const string& usuario, const string& contrasena)
     : id(id), usuario(usuario), contrasena(contrasena) {}
 
-int Usuario::getId() const { return id; }
-std::string Usuario::getUsuario() const { return usuario; }
-std::string Usuario::getContrasena() const { return contrasena; }
+int Usuario::getId() const {
+    return id;
+}
 
-void Usuario::setUsuario(const std::string& u) { usuario = u; }
-void Usuario::setContrasena(const std::string& p) { contrasena = p; }
+string Usuario::getUsuario() const {
+    return usuario;
+}
+
+string Usuario::getContrasena() const {
+    return contrasena;
+}
+
+void Usuario::setUsuario(const string& usuario) {
+    this->usuario = usuario;
+}
+
+void Usuario::setContrasena(const string& contrasena) {
+    this->contrasena = contrasena;
+}

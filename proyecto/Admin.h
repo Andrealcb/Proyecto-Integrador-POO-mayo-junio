@@ -6,9 +6,10 @@
 class Administrador : public Usuario {
 public:
     Administrador();
-    Administrador(int id, const std::string& usuario, const std::string& contrasena);
+    Administrador(int id, const string& usuario, const string& contrasena);
 
-    std::string getTipo() const override;
+    string getTipo() const override;
+    void mostrarInformacion() const override;
 };
 
 #endif

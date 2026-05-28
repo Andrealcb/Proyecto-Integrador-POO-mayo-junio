@@ -4,84 +4,82 @@
 #include "Admin.h"
 #include "Gerente.h"
 #include "Empleado.h"
-#include <vector>
-#include <string>
 #include "Producto.h"
 #include "Usuario.h"
 #include "Venta.h"
 #include "Carrito.h"
 
-/*
- * Clase Tienda: contiene las "tablas" en memoria, métodos CRUD, ventas y reportes.
- */
+#include <vector>
+#include <string>
+
+using namespace std;
+
 class Tienda {
 private:
-    // "Tablas" simuladas
-    std::vector<Venta> ventas_registradas;
-    std::vector<std::vector<std::string>> reporte_ventas;
-    std::vector<Administrador> administradores;
-    std::vector<Gerente> gerentes;
-    std::vector<Empleado> empleados;
-    std::vector<Producto> productos;
 
+    vector<Usuario*> usuarios;
+    vector<Producto> productos;
+    vector<Venta> ventas_registradas;
+    vector<vector<string>> reporte_ventas;
 
-
-    // IDs automáticos
     int nextProductoId;
     int nextUsuarioId;
     int nextVentaId;
 
-    // Helpers
-    std::string nowString() const;
-    std::string readLine(const std::string& prompt = "") const;
-    double parseDouble(const std::string& s) const;
-    int parseInt(const std::string& s) const;
+    string nowString() const;
+    string readLine(const string& prompt = "") const;
 
-    int indexProductoPorCodigo(const std::string& codigo) const;
-    bool codigoExiste(const std::string& codigo) const;
-    bool usuarioExisteEnColeccion(const std::string& nombre) const;
+    double parseDouble(const string& texto) const;
+    int parseInt(const string& texto) const;
+
+    int indexProductoPorCodigo(const string& codigo) const;
+
+    bool codigoExiste(const string& codigo) const;
+    bool usuarioExisteEnColeccion(const string& nombreUsuario) const;
 
 public:
-    Tienda();
 
-    // Inicialización
+    Tienda();
+    ~Tienda();
+
     void crearTablas();
 
-    // Productos
     void agregarProducto();
     void buscarProductoPorCodigo() const;
     void modificarProducto();
     void eliminarProducto();
     void mostrarProductos() const;
 
-    // Usuarios
     void agregarGerente();
     void agregarEmpleado();
+
     void modificarGerente();
     void modificarEmpleado();
+
     void eliminarGerente();
     void eliminarEmpleado();
+
     void mostrarUsuarios() const;
     void mostrarUsuariosCombinados() const;
 
-    // Ventas / Carrito
-    void venderProducto(const std::string& nombre_usuario = "Desconocido",
-                        const std::string& rango = "Desconocido");
-    void registrarVenta(const std::vector<std::pair<std::vector<std::string>,int>>& productos_a_vender,
-                        double total_venta,
-                        const std::string& usuario,
-                        const std::string& rango);
+    void venderProducto(const string& nombre_usuario = "Desconocido",
+                        const string& rango = "Desconocido");
 
-    // Reportes
+    void registrarVenta(
+        const vector<pair<vector<string>, int>>& productos_a_vender,
+        double total_venta,
+        const string& usuario,
+        const string& rango
+    );
+
     void mostrarReporteVentas() const;
 
-    // Login
-    std::vector<std::string> siAdministrador() const;
-    std::vector<std::string> siGerente() const;
-    std::vector<std::string> siEmpleado() const;
+    vector<string> siAdministrador() const;
+    vector<string> siGerente() const;
+    vector<string> siEmpleado() const;
+
     void administradorNo();
 
-    // Run / Menú
     void run();
 };
 
