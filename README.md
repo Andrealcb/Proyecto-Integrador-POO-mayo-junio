@@ -110,7 +110,7 @@ g++ main.cpp Tienda.cpp Producto.cpp Usuario.cpp Admin.cpp Gerente.cpp Empleado.
 
 ### **2. Ejecutar**
 
-```
+
 ./tienda o solo tienda.
 ```
 
@@ -136,4 +136,12 @@ Las opciones del menú dependeran de que rango eres, entre más alto el rango ma
 
 ---
 
+## Casos donde puede dejar de funcionar:
+
+- Usuario vacío
+- Código duplicado
+- Stock insuficiente
+- Pago insuficiente
+- Producto inexistente
+- Contraseña incorrecta
 
