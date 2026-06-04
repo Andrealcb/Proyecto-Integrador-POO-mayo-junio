@@ -1,6 +1,4 @@
-En este avance solo modifique el codigo, con las recomendaciones que me dieron y arregle el uso de polimorfismo, el cambio mas notorio es en Tienda.cpp ;)
-
-# Proyecto: Tienda ⌂ (entrega final POO semestre anterior)
+# Proyecto: Tienda ⌂ 
 
 Simulador de una tienda desarrollado en **C++** utilizando **Programación Orientada a Objetos (POO)**, **herencia**, **composición**, separación en archivos `.h` y `.cpp`, y un menú interactivo por consola.
 
@@ -93,10 +91,6 @@ Proyecto/
 * Métodos: mostrarProductos(), registrarUsuario(), comprar(), menú principal
 * Ubicación: `Tienda.h / Tienda.cpp`
 
----
-
-## ¿Cómo se usa?
-
 
 ---
 
@@ -117,7 +111,7 @@ g++ main.cpp Tienda.cpp Producto.cpp Usuario.cpp Admin.cpp Gerente.cpp Empleado.
 ### **2. Ejecutar**
 
 ```
-./proyecto
+./tienda o solo tienda.
 ```
 
 ### **3. Interactuar con el programa**
