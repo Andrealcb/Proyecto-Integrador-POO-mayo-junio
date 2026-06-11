@@ -101,7 +101,7 @@ Proyecto/
 En consola:
 
 ```bash
-podiar la direccion de la carpeta con los archivos y poner cd "Dirreccion"
+poner la direccion de la carpeta con los archivos y poner cd "Dirreccion"
 
 y luego:
  
