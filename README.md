@@ -106,13 +106,13 @@ podiar la direccion de la carpeta con los archivos y poner cd "Dirreccion"
 y luego:
  
 g++ main.cpp Tienda.cpp Producto.cpp Usuario.cpp Admin.cpp Gerente.cpp Empleado.cpp Carrito.cpp -o tienda
-
+```
 
 ### **2. Ejecutar**
 
 
 ./tienda o solo tienda.
-```
+
 
 ### **3. Interactuar con el programa**
 
