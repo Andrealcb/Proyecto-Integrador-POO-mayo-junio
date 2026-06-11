@@ -20,7 +20,6 @@ private:
     vector<Usuario*> usuarios;
     vector<Producto> productos;
     vector<Venta> ventas_registradas;
-    vector<vector<string>> reporte_ventas;
 
     int nextProductoId;
     int nextUsuarioId;
@@ -44,22 +43,25 @@ public:
 
     void crearTablas();
 
+    // Sobrecarga: una version pide datos al usuario y otra recibe parametros.
     void agregarProducto();
+    void agregarProducto(string nombre, string codigo, double precio, int cantidad);
+
     void buscarProductoPorCodigo() const;
+    void buscarProductoPorCodigo(string codigo) const;
+
     void modificarProducto();
     void eliminarProducto();
     void mostrarProductos() const;
 
     void agregarGerente();
+    void agregarGerente(string usuario, string contrasena);
+
     void agregarEmpleado();
-
-    void modificarGerente();
-    void modificarEmpleado();
-
-    void eliminarGerente();
-    void eliminarEmpleado();
+    void agregarEmpleado(string usuario, string contrasena);
 
     void mostrarUsuarios() const;
+    void mostrarUsuarios(string tipo) const;
     void mostrarUsuariosCombinados() const;
 
     void venderProducto(const string& nombre_usuario = "Desconocido",

@@ -144,20 +144,7 @@ void Tienda::agregarProducto() {
     cout << "\n--- Agregar Producto ---\n";
 
     string nombreProducto = readLine("Ingrese el nombre del producto: ");
-
     string codigoProducto = readLine("Ingrese el codigo del producto: ");
-
-    if (codigoProducto.empty()) {
-
-        cout << "El codigo no puede estar vacio.\n";
-        return;
-    }
-
-    if (codigoExiste(codigoProducto)) {
-
-        cout << "Ese codigo ya existe.\n";
-        return;
-    }
 
     double precioProducto = parseDouble(
         readLine("Ingrese el precio del producto: ")
@@ -167,12 +154,42 @@ void Tienda::agregarProducto() {
         readLine("Ingrese la cantidad en stock: ")
     );
 
+    agregarProducto(nombreProducto, codigoProducto, precioProducto, cantidadProducto);
+}
+
+void Tienda::agregarProducto(string nombre, string codigo, double precio, int cantidad) {
+
+    if (nombre.empty()) {
+        cout << "El nombre no puede estar vacio.\n";
+        return;
+    }
+
+    if (codigo.empty()) {
+        cout << "El codigo no puede estar vacio.\n";
+        return;
+    }
+
+    if (codigoExiste(codigo)) {
+        cout << "Ese codigo ya existe.\n";
+        return;
+    }
+
+    if (precio <= 0) {
+        cout << "El precio debe ser mayor que cero.\n";
+        return;
+    }
+
+    if (cantidad < 0) {
+        cout << "La cantidad no puede ser negativa.\n";
+        return;
+    }
+
     Producto nuevoProducto(
         nextProductoId++,
-        nombreProducto,
-        codigoProducto,
-        precioProducto,
-        cantidadProducto
+        nombre,
+        codigo,
+        precio,
+        cantidad
     );
 
     productos.push_back(nuevoProducto);
@@ -208,25 +225,32 @@ void Tienda::agregarGerente() {
     cout << "\n--- Agregar Gerente ---\n";
 
     string nombreUsuario = readLine("Ingrese el nombre de usuario: ");
+    string contrasena = readLine("Ingrese contraseña: ");
 
-    if (nombreUsuario.empty()) {
+    agregarGerente(nombreUsuario, contrasena);
+}
 
+void Tienda::agregarGerente(string usuario, string contrasena) {
+
+    if (usuario.empty()) {
         cout << "El usuario no puede estar vacio.\n";
         return;
     }
 
-    if (usuarioExisteEnColeccion(nombreUsuario)) {
+    if (contrasena.empty()) {
+        cout << "La contraseña no puede estar vacia.\n";
+        return;
+    }
 
+    if (usuarioExisteEnColeccion(usuario)) {
         cout << "Ese usuario ya existe.\n";
         return;
     }
 
-    string contrasena = readLine("Ingrese contraseña: ");
-
     usuarios.push_back(
         new Gerente(
             nextUsuarioId++,
-            nombreUsuario,
+            usuario,
             contrasena
         )
     );
@@ -243,25 +267,32 @@ void Tienda::agregarEmpleado() {
     cout << "\n--- Agregar Empleado ---\n";
 
     string nombreUsuario = readLine("Ingrese el nombre de usuario: ");
+    string contrasena = readLine("Ingrese contraseña: ");
 
-    if (nombreUsuario.empty()) {
+    agregarEmpleado(nombreUsuario, contrasena);
+}
 
+void Tienda::agregarEmpleado(string usuario, string contrasena) {
+
+    if (usuario.empty()) {
         cout << "El usuario no puede estar vacio.\n";
         return;
     }
 
-    if (usuarioExisteEnColeccion(nombreUsuario)) {
+    if (contrasena.empty()) {
+        cout << "La contraseña no puede estar vacia.\n";
+        return;
+    }
 
+    if (usuarioExisteEnColeccion(usuario)) {
         cout << "Ese usuario ya existe.\n";
         return;
     }
 
-    string contrasena = readLine("Ingrese contraseña: ");
-
     usuarios.push_back(
         new Empleado(
             nextUsuarioId++,
-            nombreUsuario,
+            usuario,
             contrasena
         )
     );
@@ -283,9 +314,30 @@ void Tienda::mostrarUsuarios() const {
         return;
     }
 
+    // Polimorfismo: el vector guarda Usuario*, pero se ejecuta el metodo
+    // mostrarInformacion() correspondiente a cada clase hija.
     for (const Usuario* usuario : usuarios) {
 
         usuario->mostrarInformacion();
+    }
+}
+
+void Tienda::mostrarUsuarios(string tipo) const {
+
+    cout << "\n--- USUARIOS: " << tipo << " ---\n";
+
+    bool encontrado = false;
+
+    for (const Usuario* usuario : usuarios) {
+
+        if (usuario->getTipo() == tipo) {
+            usuario->mostrarInformacion();
+            encontrado = true;
+        }
+    }
+
+    if (!encontrado) {
+        cout << "No hay usuarios de tipo " << tipo << ".\n";
     }
 }
 
@@ -459,10 +511,14 @@ void Tienda::buscarProductoPorCodigo() const {
 
     string codigoProducto = readLine("Ingrese el codigo del producto: ");
 
-    int indiceProducto = indexProductoPorCodigo(codigoProducto);
+    buscarProductoPorCodigo(codigoProducto);
+}
+
+void Tienda::buscarProductoPorCodigo(string codigo) const {
+
+    int indiceProducto = indexProductoPorCodigo(codigo);
 
     if (indiceProducto == -1) {
-
         cout << "Producto no encontrado.\n";
         return;
     }
@@ -470,17 +526,11 @@ void Tienda::buscarProductoPorCodigo() const {
     const Producto& productoEncontrado = productos[indiceProducto];
 
     cout << "Producto encontrado:\n";
-
     cout << "Nombre: " << productoEncontrado.getNombre() << endl;
-
     cout << "Codigo: " << productoEncontrado.getCodigo() << endl;
-
     cout << "Precio: $" << fixed << setprecision(2)
          << productoEncontrado.getPrecio() << endl;
-
-    cout << "Stock: "
-         << productoEncontrado.getCantidad()
-         << endl;
+    cout << "Stock: " << productoEncontrado.getCantidad() << endl;
 }
 
 /* =========================
