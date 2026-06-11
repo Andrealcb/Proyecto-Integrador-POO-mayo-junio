@@ -43,7 +43,7 @@ public:
 
     void crearTablas();
 
-    // Sobrecarga: una version pide datos al usuario y otra recibe parametros.
+    
     void agregarProducto();
     void agregarProducto(string nombre, string codigo, double precio, int cantidad);
 
